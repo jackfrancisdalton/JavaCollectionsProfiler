@@ -1,5 +1,7 @@
-package List;
+package CollectionsImplementation.ListImplementation;
 
+import Config.Function;
+import Config.Order;
 import Helper.TestResult;
 
 import java.util.*;
@@ -69,7 +71,7 @@ public class ListProfiler<T> {
         this.type = type;
     }
 
-    public TestResult test(Class<? extends List> listType, int numberOfRuns, int sampleSize) {
+    public TestResult test(Class<? extends List> listType, int numberOfRuns, int sampleSize, Function function, Order order) throws Exception {
 
         if(linkedList.getClass() == listType)
             listUnderInspection = linkedList;
@@ -80,9 +82,14 @@ public class ListProfiler<T> {
         else if(copyOnWriteArrayList.getClass() == listType)
             listUnderInspection = copyOnWriteArrayList;
 
-//        return iterationTest(listType, numberOfRuns, sampleSize);
-//        return insertionTest(listType, numberOfRuns, sampleSize, true);
-        return deleteTest(listType, numberOfRuns, sampleSize, true);
+        if(function == Function.INSERT)
+            return addElementTest(listType, numberOfRuns, sampleSize, order);
+        else if(function == Function.ITERATE)
+            return iterationTest(listType, numberOfRuns, sampleSize);
+        else if (function == Function.REMOVE)
+            return removeElementTest(listType, numberOfRuns, sampleSize, order);
+        else
+            throw new Exception("invalid test function");
     }
 
     public TestResult iterationTest(Class<?> listType, int numberOfRuns, int sampleSize) {
@@ -102,7 +109,7 @@ public class ListProfiler<T> {
         return new TestResult(listType.getSimpleName(), results, listUnderInspection.size());
     }
 
-    public TestResult deleteTest(Class<? extends List> listType, int numberOfRuns, int size, boolean randomInsertionPosition) {
+    public TestResult removeElementTest(Class<? extends List> listType, int numberOfRuns, int size, Order order) {
         generateValues(size);
         Random random = new Random();
         long[] results = new long[numberOfRuns];
@@ -114,10 +121,13 @@ public class ListProfiler<T> {
                 listUnderInspectionCopy = copyToInstanceOfListType(listType, listUnderInspection);
                 long start = System.nanoTime();
 
-                if(randomInsertionPosition)
+                if(order == Order.RANDOM)
                     for (int j = 0; j < size; j++)
                         listUnderInspectionCopy.remove(random.nextInt(listUnderInspectionCopy.size()));
-                else
+                else if (order == Order.REVERSE)
+                    for (int j = 0; j < size; j++)
+                        listUnderInspectionCopy.remove(listUnderInspectionCopy.size());
+                else if (order == order.STANDARD)
                     for (int j = 0; j < size; j++)
                         listUnderInspectionCopy.remove(0);
 
@@ -130,7 +140,7 @@ public class ListProfiler<T> {
         return new TestResult(listType.getSimpleName(), results, size);
     }
 
-    public TestResult insertionTest(Class<? extends List> listType, int numberOfRuns, int size, boolean randomInsertionPosition) {
+    public TestResult addElementTest(Class<? extends List> listType, int numberOfRuns, int size, Order order) {
         resetListStates();
         Random random = new Random();
         long[] results = new long[numberOfRuns];
@@ -139,13 +149,16 @@ public class ListProfiler<T> {
             for (int i = 0; i < numberOfRuns; i++) {
                 long start = System.nanoTime();
 
-                if(randomInsertionPosition) {
-                    for (int j = 0; j < size; j++) {
+                if(order == Order.RANDOM)
+                    for (int j = 0; j < size; j++)
                         listUnderInspection.add(random.nextInt(listUnderInspection.size() + 1), generateTypeInstance());
-                    }
-                } else {
+                else if (order == Order.STANDARD)
                     for (int j = 0; j < size; j++)
                         listUnderInspection.add(generateTypeInstance());
+                else if (order == Order.REVERSE) {
+                    for (int j = 0; j < size; j++) {
+                        listUnderInspection.add(listUnderInspection.size(), generateTypeInstance());
+                    }
                 }
 
                 listUnderInspection.clear();
