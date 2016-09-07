@@ -29,7 +29,6 @@ public class TestResult {
         this.calculateStatistics();
     }
 
-
     private void convertResults() {
 
         //Assumes millis are given
@@ -105,13 +104,6 @@ public class TestResult {
             }
         }
         return min;
-    }
-
-    public void printRawResults() {
-        System.out.println("=== " + label + " ===");
-        for (int i = 0; i < rawResults.length; i++) {
-            System.out.println(rawResults[i]);
-        }
     }
     
     @Override

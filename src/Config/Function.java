@@ -6,5 +6,6 @@ package config;
 public enum Function {
     ITERATE,
     INSERT,
+    SORT,
     REMOVE
 }

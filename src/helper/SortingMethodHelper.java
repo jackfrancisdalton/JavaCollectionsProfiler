@@ -1,19 +1,17 @@
 package helper;
 
 import sortingMethods.SortStrategy;
-
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Jack F. Dalton on 0007 07 09 2016.
- */
 public class SortingMethodHelper {
 
     private static SortingMethodHelper instance;
     private static ArrayList<String> sortingMethods = new ArrayList<>();
+
     private SortingMethodHelper() { }
 
     public static SortingMethodHelper getInstance() {
@@ -26,7 +24,18 @@ public class SortingMethodHelper {
         return instance;
     }
 
-    private static void  populateClassList() {
+    public static SortStrategy convertStringToClass(String sortMethodClassName) throws Exception {
+        Class<?> clazz = Class.forName("sortingMethods.common." + sortMethodClassName);
+        Constructor<?> ctor = clazz.getConstructor();
+        Object object = ctor.newInstance();
+        try {
+            return (SortStrategy) object;
+        } catch (Exception e) {
+            throw new Exception("Could not cast SortStrategy found in common or custom, insure all classes implement SortStrategy interface");
+        }
+    }
+
+    private static void populateClassList() {
         try {
             sortingMethods.addAll(ClassFinder.getClassNamesFromPackage("sortingMethods.common"));
             sortingMethods.addAll(ClassFinder.getClassNamesFromPackage("sortingMethods.custom"));

@@ -2,9 +2,7 @@ package collectionsImplementation.ListImplementation;
 
 import config.Function;
 import config.Order;
-import helper.SortingMethodHelper;
 import helper.TestResult;
-import sortingMethods.common.BubbleSort;
 import sortingMethods.SortStrategy;
 
 import java.time.temporal.ChronoUnit;
@@ -30,7 +28,7 @@ public class ListProfiler<T extends Comparable> {
         this.type = type;
     }
 
-    public void generateValues(int size) {
+    public void generateValues(int size, Order order) {
         linkedList.clear();
         arrayList.clear();
         vector.clear();
@@ -43,6 +41,8 @@ public class ListProfiler<T extends Comparable> {
             vector.add(instance);
             copyOnWriteArrayList.add(instance);
         }
+
+        //TODO: implement a way of generating lists of specific ordering (this will also need to be added to the ui
     }
 
     private T generateTypeInstance() {
@@ -77,8 +77,9 @@ public class ListProfiler<T extends Comparable> {
         this.type = type;
     }
 
-    public TestResult test(Class<? extends List> listType, int numberOfRuns, int sampleSize, Function function, Order order) throws Exception {
+    public TestResult test(Class<? extends List> listType, int numberOfRuns, int sampleSize, Function function, Order order, SortStrategy sortingStrategy, ChronoUnit timeUnit) throws Exception {
 
+        //Load in the specified list to test
         if(linkedList.getClass() == listType)
             listUnderInspection = linkedList;
         else if(arrayList.getClass() == listType)
@@ -88,24 +89,21 @@ public class ListProfiler<T extends Comparable> {
         else if(copyOnWriteArrayList.getClass() == listType)
             listUnderInspection = copyOnWriteArrayList;
 
-        //TODO: figure out how to better get the correct collection class inserted to the bubble sort
-
-
-//        SortingMethodHelper.getInstance();
-
         if(function == Function.INSERT)
-            return addElementTest(listType, numberOfRuns, sampleSize, order);
+            return addElementTest(listType, numberOfRuns, sampleSize, order, timeUnit);
         else if(function == Function.ITERATE)
-            return iterationTest(listType, numberOfRuns, sampleSize);
+            return iterationTest(listType, numberOfRuns, sampleSize, timeUnit);
         else if (function == Function.REMOVE)
-            return removeElementTest(listType, numberOfRuns, sampleSize, order);
+            return removeElementTest(listType, numberOfRuns, sampleSize, order, timeUnit);
+        else if (function == Function.SORT)
+            return sortingTest(listType, numberOfRuns, sampleSize, sortingStrategy, timeUnit);
         else
             throw new Exception("invalid test function");
     }
 
-    public TestResult sortingTest(Class<?> listType, int numberOfRuns, int sampleSize, SortStrategy<T> sortStrategy) {
+    public TestResult sortingTest(Class<?> listType, int numberOfRuns, int sampleSize, SortStrategy<T> sortStrategy, ChronoUnit timeUnit) {
         long[] results = new long[numberOfRuns];
-        generateValues(sampleSize);
+        generateValues(sampleSize, Order.RANDOM);
 
         if(listUnderInspection != null) {
             for (int i = 0; i < numberOfRuns; i++) {
@@ -116,13 +114,13 @@ public class ListProfiler<T extends Comparable> {
             }
         }
 
-        return new TestResult(listType.getSimpleName(), results, listUnderInspection.size(), chronoUnit);
+        return new TestResult(listType.getSimpleName(), results, listUnderInspection.size(), timeUnit);
     }
 
-    public TestResult iterationTest(Class<?> listType, int numberOfRuns, int sampleSize) {
+    public TestResult iterationTest(Class<?> listType, int numberOfRuns, int sampleSize, ChronoUnit timeUnit) {
         long[] results = new long[numberOfRuns];
 
-        generateValues(sampleSize);
+        generateValues(sampleSize, Order.RANDOM);
 
         if(listUnderInspection != null) {
             for (int i = 0; i < numberOfRuns; i++) {
@@ -133,11 +131,11 @@ public class ListProfiler<T extends Comparable> {
             }
         }
 
-        return new TestResult(listType.getSimpleName(), results, listUnderInspection.size(), chronoUnit);
+        return new TestResult(listType.getSimpleName(), results, listUnderInspection.size(), timeUnit);
     }
 
-    public TestResult removeElementTest(Class<? extends List> listType, int numberOfRuns, int size, Order order) {
-        generateValues(size);
+    public TestResult removeElementTest(Class<? extends List> listType, int numberOfRuns, int size, Order order, ChronoUnit timeUnit) {
+        generateValues(size, Order.RANDOM);
         Random random = new Random();
         long[] results = new long[numberOfRuns];
         List<T> listUnderInspectionCopy = copyToInstanceOfListType(listType, listUnderInspection);
@@ -153,7 +151,7 @@ public class ListProfiler<T extends Comparable> {
                         listUnderInspectionCopy.remove(random.nextInt(listUnderInspectionCopy.size()));
                 else if (order == Order.REVERSE)
                     for (int j = 0; j < size; j++)
-                        listUnderInspectionCopy.remove(listUnderInspectionCopy.size());
+                        listUnderInspectionCopy.remove(listUnderInspectionCopy.size() - 1);
                 else if (order == order.STANDARD)
                     for (int j = 0; j < size; j++)
                         listUnderInspectionCopy.remove(0);
@@ -164,10 +162,10 @@ public class ListProfiler<T extends Comparable> {
             }
         }
 
-        return new TestResult(listType.getSimpleName(), results, size, chronoUnit);
+        return new TestResult(listType.getSimpleName(), results, size, timeUnit);
     }
 
-    public TestResult addElementTest(Class<? extends List> listType, int numberOfRuns, int size, Order order) {
+    public TestResult addElementTest(Class<? extends List> listType, int numberOfRuns, int size, Order order, ChronoUnit timeUnit) {
         resetListStates();
         Random random = new Random();
         long[] results = new long[numberOfRuns];
@@ -194,7 +192,7 @@ public class ListProfiler<T extends Comparable> {
             }
         }
 
-        return new TestResult(listType.getSimpleName(), results, size, chronoUnit);
+        return new TestResult(listType.getSimpleName(), results, size, timeUnit);
     }
 
     public void randomInsertionTest(Class<?> t) {

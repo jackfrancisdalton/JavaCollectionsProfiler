@@ -4,8 +4,10 @@ import chart.BarChart;
 import collectionsImplementation.ListImplementation.ListProfiler;
 import config.Function;
 import config.Order;
+import sortingMethods.SortStrategy;
 import sortingMethods.common.BubbleSort;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,10 +30,13 @@ public class TestRunner {
             int sampleSizeSteps,
             List<String> listToTest,
             Function function,
-            Order order
+            Order order,
+            SortStrategy sortStrategy,
+            ChronoUnit timeUnit
     ) throws Exception {
 
-        ListProfiler<String> listProfiler = new ListProfiler<>(String.class);
+        //TODO: change string to a generic when type choice is added
+        ListProfiler<Integer> listProfiler = new ListProfiler<>(Integer.class);
         List<Class<? extends List>> listTypesToTest = new ArrayList<>();
 
         for (String implementationClassName: listToTest)
@@ -44,23 +49,31 @@ public class TestRunner {
             else if(implementationClassName == CopyOnWriteArrayList.class.getSimpleName())
                 listTypesToTest.add(CopyOnWriteArrayList.class);
 
-
         List<TestResult> testResults = new ArrayList<>();
 
-        for (int sampleSize = minSampleSize; sampleSize < maxSampleSize; sampleSize += sampleSizeSteps) {
+        for (int sampleSize = minSampleSize; sampleSize < maxSampleSize; sampleSize += sampleSizeSteps)
             for (Class<? extends List> listImplementation: listTypesToTest) {
-                TestResult linkedListTR = listProfiler.test(listImplementation, runThroughCount, sampleSize, function, order);
+                TestResult linkedListTR = listProfiler.test(listImplementation, runThroughCount, sampleSize, function, order, sortStrategy, timeUnit);
                 testResults.add(linkedListTR);
             }
-        }
 
-        generateBarChart(
-                "Results",
-                order.toString() + " " + function.toString() + " Result",
-                "List Type",
-                testResults.get(0).getyAxisLabel(),
-                testResults
-        );
+        if(Function.SORT == function) {
+            generateBarChart(
+                    "Results",
+                    sortStrategy.getClass().getSimpleName() + " Result",
+                    "List Type",
+                    testResults.get(0).getyAxisLabel(),
+                    testResults
+            );
+        } else {
+            generateBarChart(
+                    "Results",
+                    order.toString() + " " + function.toString() + " Result",
+                    "List Type",
+                    testResults.get(0).getyAxisLabel(),
+                    testResults
+            );
+        }
     }
 
 

@@ -1,28 +1,20 @@
-package chart;
+package ui;
 
 import config.Function;
 import config.Order;
-import helper.ClassFinder;
 import helper.SortingMethodHelper;
 import helper.TestRunner;
+import sortingMethods.SortStrategy;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLDecoder;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 public class HomeForm extends JFrame {
 
@@ -47,6 +39,10 @@ public class HomeForm extends JFrame {
     private JLabel orderTypeLabel;
     private JComboBox comboBoxOrder;
 
+    //Sort Type label and combo
+    private JLabel sortTypeLabel;
+    private JComboBox comboBoxSort;
+
     //Configuration label and text fields
     private JLabel numberOfRunsLabel;
     private JLabel minimumSampleSizeLabel;
@@ -57,6 +53,9 @@ public class HomeForm extends JFrame {
     private JTextField maximumSampleSize;
     private JTextField sampleSizeStep;
 
+    //units
+    private JComboBox timeUnitsComboBox;
+
     public HomeForm() {
         setUpViewElements();
         populateViewElements();
@@ -65,6 +64,31 @@ public class HomeForm extends JFrame {
 
     private void setUpListeners() {
         runButton.addActionListener(new ButtonActionListener());
+
+        comboBoxFunction.addActionListener(e -> {
+            String currentlySelected = comboBoxFunction.getSelectedItem().toString().toUpperCase();
+
+            if(Function.SORT.toString().equalsIgnoreCase(currentlySelected)) {
+                toggleOrderSortVisibility(true);
+            } else {
+                toggleOrderSortVisibility(false);
+            }
+
+            //TODO: if random is already chosen then changing
+
+            runButton.setEnabled(true);
+        });
+
+        comboBoxOrder.addActionListener(e -> {
+            String selectedOrder = comboBoxOrder.getSelectedItem().toString().toUpperCase();
+            String selectedFunction = comboBoxFunction.getSelectedItem().toString().toUpperCase();
+
+            if(selectedOrder.equalsIgnoreCase(Order.RANDOM.toString()) && selectedFunction.equalsIgnoreCase(Function.ITERATE.toString())) {
+                runButton.setEnabled(false);
+            } else {
+                runButton.setEnabled(true);
+            }
+        });
     }
 
     private void setUpViewElements() {
@@ -72,14 +96,14 @@ public class HomeForm extends JFrame {
         setTitle("Collection Profiler");
         setLocationRelativeTo(null);
         mainPanel = new JPanel(new GridBagLayout());
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         setContentPane(mainPanel);
 
         GridBagConstraints gc = new GridBagConstraints();
         gc.gridx = 0;
         gc.fill = GridBagConstraints.BOTH;
         gc.anchor = GridBagConstraints.NORTHWEST;
-        gc.insets = new Insets(5, 5, 5, 5);
+        gc.insets = new Insets(2, 2, 2, 2);
         gc.weightx = 1;
         gc.weighty = 1;
 
@@ -101,8 +125,7 @@ public class HomeForm extends JFrame {
         gc.gridy = 3;
         mainPanel.add(listTypeCB_copyOnWriteArrayList, gc);
 
-        //set up function list
-
+        //set up function label and comboBox
         functionTypeLabel = new JLabel("Function Implementation");
         gc.gridy = 5;
         mainPanel.add(functionTypeLabel, gc);
@@ -114,6 +137,7 @@ public class HomeForm extends JFrame {
         gc.gridx = 1;
         gc.gridwidth = 2;
 
+        //set up order label and comboBox
         orderTypeLabel = new JLabel("Order Implementation");
         gc.gridy = 5;
         mainPanel.add(orderTypeLabel, gc);
@@ -122,15 +146,32 @@ public class HomeForm extends JFrame {
         gc.gridy = 6;
         mainPanel.add(comboBoxOrder, gc);
 
+        //set up sort label and comboBox
+
+        sortTypeLabel = new JLabel("Sort Method");
+        sortTypeLabel.setVisible(false);
+        gc.gridy = 5;
+        mainPanel.add(sortTypeLabel, gc);
+
+        comboBoxSort = new JComboBox();
+        comboBoxSort.setVisible(false);
+        gc.gridy = 6;
+        mainPanel.add(comboBoxSort, gc);
+
         gc.gridwidth = 4;
         gc.gridx = 0;
 
+        //Time
+        timeUnitsComboBox = new JComboBox();
+        gc.gridy = 7;
+        mainPanel.add(timeUnitsComboBox, gc);
+
+        //set up run button
         runButton = new JButton("Run");
-        gc.gridy = 9;
+        gc.gridy = 8;
         mainPanel.add(runButton, gc);
 
         //set up edit text fields for entering sample sizes and runs
-
         gc.gridx = 1;
         gc.gridwidth = 1;
 
@@ -191,16 +232,20 @@ public class HomeForm extends JFrame {
         comboBoxOrder.addItem(toProperCase(Order.REVERSE.toString()));
 
         functionTypeLabel.setText("Function Type");
+        comboBoxFunction.addItem(toProperCase(Function.SORT.toString()));
         comboBoxFunction.addItem(toProperCase(Function.ITERATE.toString()));
         comboBoxFunction.addItem(toProperCase(Function.INSERT.toString()));
         comboBoxFunction.addItem(toProperCase(Function.REMOVE.toString()));
 
         for (String className : SortingMethodHelper.getInstance().getClassList()) {
-            comboBoxFunction.addItem(toProperCase(className));
+            comboBoxSort.addItem(className);
         }
+        comboBoxSort.setVisible(false);
+
+        timeUnitsComboBox.addItem(ChronoUnit.MILLIS);
+        timeUnitsComboBox.addItem(ChronoUnit.SECONDS);
+        timeUnitsComboBox.addItem(ChronoUnit.MINUTES);
     }
-
-
 
     private class ButtonActionListener implements ActionListener {
 
@@ -220,12 +265,30 @@ public class HomeForm extends JFrame {
             int maxSamples = Integer.parseInt(maximumSampleSize.getText());
             int step = Integer.parseInt(sampleSizeStep.getText());
 
+            SortStrategy sortStrategy = null;
             try {
-                TestRunner.runTest(runs, minSamples, maxSamples, step, listImplementationsToTest, functionTypeValue, orderValue);
+                sortStrategy = SortingMethodHelper.getInstance().convertStringToClass(comboBoxSort.getSelectedItem().toString());
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+
+            ChronoUnit chronoUnit = ChronoUnit.valueOf(timeUnitsComboBox.getSelectedItem().toString().toUpperCase());
+
+            try {
+                TestRunner.runTest(runs, minSamples, maxSamples, step, listImplementationsToTest, functionTypeValue, orderValue, sortStrategy, chronoUnit);
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
         }
+    }
+
+    private void toggleOrderSortVisibility(boolean setSort) {
+        sortTypeLabel.setVisible(setSort);
+        comboBoxSort.setVisible(setSort);
+        orderTypeLabel.setVisible(!setSort);
+        comboBoxOrder.setVisible(!setSort);
+        comboBoxSort.setEnabled(true);
+        comboBoxOrder.setEnabled(true);
     }
 
     static String toProperCase(String s) {
