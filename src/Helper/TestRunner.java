@@ -1,9 +1,10 @@
-package Helper;
+package helper;
 
-import Chart.BarChart;
-import CollectionsImplementation.ListImplementation.ListProfiler;
-import Config.Function;
-import Config.Order;
+import chart.BarChart;
+import collectionsImplementation.ListImplementation.ListProfiler;
+import config.Function;
+import config.Order;
+import sortingMethods.common.BubbleSort;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -42,6 +43,7 @@ public class TestRunner {
                 listTypesToTest.add(Vector.class);
             else if(implementationClassName == CopyOnWriteArrayList.class.getSimpleName())
                 listTypesToTest.add(CopyOnWriteArrayList.class);
+
 
         List<TestResult> testResults = new ArrayList<>();
 

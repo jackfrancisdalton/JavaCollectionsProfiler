@@ -1,6 +1,6 @@
-package Chart;
+package chart;
 
-import Helper.TestResult;
+import helper.TestResult;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;

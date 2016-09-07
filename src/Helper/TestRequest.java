@@ -1,8 +1,7 @@
-package Helper;
+package helper;
 
-import Config.Function;
-import Config.Order;
-import com.sun.org.apache.xpath.internal.operations.Or;
+import config.Function;
+import config.Order;
 
 import java.util.List;
 

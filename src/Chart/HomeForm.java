@@ -1,17 +1,28 @@
-package Chart;
+package chart;
 
-import Config.Function;
-import Config.Order;
-import Helper.TestRunner;
+import config.Function;
+import config.Order;
+import helper.ClassFinder;
+import helper.SortingMethodHelper;
+import helper.TestRunner;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class HomeForm extends JFrame {
 
@@ -173,7 +184,6 @@ public class HomeForm extends JFrame {
     }
 
     private void populateViewElements() {
-//        listTypeLabel.setText("List Type");
 
         orderTypeLabel.setText("Order Type");
         comboBoxOrder.addItem(toProperCase(Order.STANDARD.toString()));
@@ -184,7 +194,13 @@ public class HomeForm extends JFrame {
         comboBoxFunction.addItem(toProperCase(Function.ITERATE.toString()));
         comboBoxFunction.addItem(toProperCase(Function.INSERT.toString()));
         comboBoxFunction.addItem(toProperCase(Function.REMOVE.toString()));
+
+        for (String className : SortingMethodHelper.getInstance().getClassList()) {
+            comboBoxFunction.addItem(toProperCase(className));
+        }
     }
+
+
 
     private class ButtonActionListener implements ActionListener {
 

@@ -1,12 +1,7 @@
-package Helper;
+package helper;
 
-import javafx.util.Pair;
-
-import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.UnsupportedTemporalTypeException;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Jack F. Dalton on 0031 31 08 2016.

@@ -1,4 +1,4 @@
-import Chart.HomeForm;
+import chart.HomeForm;
 
 public class Main {
 

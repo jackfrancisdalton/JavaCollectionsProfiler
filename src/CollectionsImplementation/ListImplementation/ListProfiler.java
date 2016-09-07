@@ -1,14 +1,17 @@
-package CollectionsImplementation.ListImplementation;
+package collectionsImplementation.ListImplementation;
 
-import Config.Function;
-import Config.Order;
-import Helper.TestResult;
+import config.Function;
+import config.Order;
+import helper.SortingMethodHelper;
+import helper.TestResult;
+import sortingMethods.common.BubbleSort;
+import sortingMethods.SortStrategy;
 
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class ListProfiler<T> {
+public class ListProfiler<T extends Comparable> {
     private Class<T> type;
     private List<T> listUnderInspection;
 
@@ -85,6 +88,11 @@ public class ListProfiler<T> {
         else if(copyOnWriteArrayList.getClass() == listType)
             listUnderInspection = copyOnWriteArrayList;
 
+        //TODO: figure out how to better get the correct collection class inserted to the bubble sort
+
+
+//        SortingMethodHelper.getInstance();
+
         if(function == Function.INSERT)
             return addElementTest(listType, numberOfRuns, sampleSize, order);
         else if(function == Function.ITERATE)
@@ -93,6 +101,22 @@ public class ListProfiler<T> {
             return removeElementTest(listType, numberOfRuns, sampleSize, order);
         else
             throw new Exception("invalid test function");
+    }
+
+    public TestResult sortingTest(Class<?> listType, int numberOfRuns, int sampleSize, SortStrategy<T> sortStrategy) {
+        long[] results = new long[numberOfRuns];
+        generateValues(sampleSize);
+
+        if(listUnderInspection != null) {
+            for (int i = 0; i < numberOfRuns; i++) {
+                long start = System.nanoTime();
+                sortStrategy.sortList(listUnderInspection);
+                long duration = System.nanoTime() - start;
+                results[i] = duration;
+            }
+        }
+
+        return new TestResult(listType.getSimpleName(), results, listUnderInspection.size(), chronoUnit);
     }
 
     public TestResult iterationTest(Class<?> listType, int numberOfRuns, int sampleSize) {
