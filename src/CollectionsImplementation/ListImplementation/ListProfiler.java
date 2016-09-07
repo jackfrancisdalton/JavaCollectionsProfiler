@@ -4,6 +4,7 @@ import Config.Function;
 import Config.Order;
 import Helper.TestResult;
 
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -15,6 +16,8 @@ public class ListProfiler<T> {
     private ArrayList<T> arrayList;
     private Vector<T> vector;
     private CopyOnWriteArrayList copyOnWriteArrayList;
+
+    private final ChronoUnit chronoUnit = ChronoUnit.MINUTES;
 
     public ListProfiler(Class<T> type) {
         this.linkedList = new LinkedList<>();
@@ -106,7 +109,7 @@ public class ListProfiler<T> {
             }
         }
 
-        return new TestResult(listType.getSimpleName(), results, listUnderInspection.size());
+        return new TestResult(listType.getSimpleName(), results, listUnderInspection.size(), chronoUnit);
     }
 
     public TestResult removeElementTest(Class<? extends List> listType, int numberOfRuns, int size, Order order) {
@@ -137,7 +140,7 @@ public class ListProfiler<T> {
             }
         }
 
-        return new TestResult(listType.getSimpleName(), results, size);
+        return new TestResult(listType.getSimpleName(), results, size, chronoUnit);
     }
 
     public TestResult addElementTest(Class<? extends List> listType, int numberOfRuns, int size, Order order) {
@@ -167,7 +170,7 @@ public class ListProfiler<T> {
             }
         }
 
-        return new TestResult(listType.getSimpleName(), results, size);
+        return new TestResult(listType.getSimpleName(), results, size, chronoUnit);
     }
 
     public void randomInsertionTest(Class<?> t) {

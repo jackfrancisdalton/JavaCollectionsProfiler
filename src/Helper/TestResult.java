@@ -2,7 +2,11 @@ package Helper;
 
 import javafx.util.Pair;
 
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Jack F. Dalton on 0031 31 08 2016.
@@ -11,21 +15,53 @@ public class TestResult {
     private String label;
     private int sampleSize;
     private long[] rawResults;
+    private double[] adjustedResults;
     private double median;
     private double mean;
-    private float range;
-    private float min;
-    //standard deviation
-    //mode
+    private double range;
+    private double min;
 
-    public TestResult(String label, long[] rawResults, int sampleSize) {
+    //TODO: switch this to a parent test results class
+    private ChronoUnit timeUnit;
+    private String yAxisLabel;
+
+    public TestResult(String label, long[] rawResults, int sampleSize, ChronoUnit timeUnit) {
         this.label = label;
         this.sampleSize = sampleSize;
         this.rawResults = rawResults;
+        this.adjustedResults = new double[rawResults.length];
+        this.timeUnit = timeUnit;
         this.calculateStatistics();
     }
 
+
+    private void convertResults() {
+
+        //Assumes millis are given
+        double divisor = 1000;
+
+        switch (timeUnit) {
+            case MILLIS:
+                yAxisLabel = "Milliseconds";
+                break;
+            case SECONDS:
+                yAxisLabel = "Seconds";
+                divisor = divisor * 100;
+                break;
+            case MINUTES:
+                yAxisLabel = "Minutes";
+                divisor = divisor * 600;
+                break;
+            default: throw new UnsupportedTemporalTypeException("TestResults time unit is not supported");
+        }
+
+        for (int i = 0; i < rawResults.length; i++) {
+            adjustedResults[i] = (double) rawResults[i] / divisor;
+        }
+    }
+
     private void calculateStatistics() {
+        convertResults();
         this.median = calculateMedian();
         this.mean = calculateMean();
         this.range = calculateRange();
@@ -33,28 +69,28 @@ public class TestResult {
     }
 
     private double calculateMedian() {
-        int middle = rawResults.length/2;
-        if (rawResults.length%2 == 1) {
-            return rawResults[middle];
+        int middle = adjustedResults.length/2;
+        if (adjustedResults.length%2 == 1) {
+            return adjustedResults[middle];
         } else {
-            return (rawResults[middle-1] + rawResults[middle]) / 2.0;
+            return (adjustedResults[middle-1] + adjustedResults[middle]) / 2.0;
         }
     }
 
     private double calculateMean() {
         float sum = 0;
-        for (int i = 0; i < rawResults.length; i++) {
-            sum += rawResults[i];
+        for (int i = 0; i < adjustedResults.length; i++) {
+            sum += adjustedResults[i];
         }
-        return sum / rawResults.length;
+        return sum / adjustedResults.length;
     }
 
-    private float calculateRange() {
-        if (rawResults.length == 0) {
+    private double calculateRange() {
+        if (adjustedResults.length == 0) {
             return 0;
         } else {
-            float max = rawResults[0];
-            float min = rawResults[0];
+            double max = adjustedResults[0];
+            double min = adjustedResults[0];
             for (final float i : rawResults) {
                 if (i > max) {
                     max = i;
@@ -66,11 +102,11 @@ public class TestResult {
         }
     }
 
-    private float calculateMinResult() {
-        float min = rawResults[0];
-        for (int i = 1; i < rawResults.length; i++) {
-            if (rawResults[i] < min) {
-                min = rawResults[i];
+    private double calculateMinResult() {
+        double min = adjustedResults[0];
+        for (int i = 1; i < adjustedResults.length; i++) {
+            if (adjustedResults[i] < min) {
+                min = adjustedResults[i];
             }
         }
         return min;
@@ -97,10 +133,10 @@ public class TestResult {
     }
 
     public String generateComparisonResults(TestResult testResult) {
-        float diffMin = this.min - testResult.min;
+        double diffMin = this.min - testResult.min;
         double diffMean = this.mean - testResult.mean;
         double diffMedian = this.median - testResult.median;
-        float diffRange = this.range - testResult.range;
+        double diffRange = this.range - testResult.range;
 
         StringBuilder stringBuilder =  new StringBuilder();
         stringBuilder.append("=== " + label + "@" + this.sampleSize + " VS " + testResult.label + "@" + this.sampleSize + " Results ===\n");
@@ -151,7 +187,7 @@ public class TestResult {
         this.mean = mean;
     }
 
-    public float getRange() {
+    public double getRange() {
         return range;
     }
 
@@ -159,11 +195,27 @@ public class TestResult {
         this.range = range;
     }
 
-    public float getMin() {
+    public double getMin() {
         return min;
     }
 
     public void setMin(float min) {
         this.min = min;
+    }
+
+    public ChronoUnit getTimeUnit() {
+        return timeUnit;
+    }
+
+    public void setTimeUnit(ChronoUnit timeUnit) {
+        this.timeUnit = timeUnit;
+    }
+
+    public String getyAxisLabel() {
+        return yAxisLabel;
+    }
+
+    public void setyAxisLabel(String yAxisLabel) {
+        this.yAxisLabel = yAxisLabel;
     }
 }

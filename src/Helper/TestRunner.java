@@ -56,7 +56,7 @@ public class TestRunner {
                 "Results",
                 order.toString() + " " + function.toString() + " Result",
                 "List Type",
-                "Milliseconds",
+                testResults.get(0).getyAxisLabel(),
                 testResults
         );
     }

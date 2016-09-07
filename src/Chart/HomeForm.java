@@ -72,10 +72,6 @@ public class HomeForm extends JFrame {
         gc.weightx = 1;
         gc.weighty = 1;
 
-//        listTypeLabel = new JLabel("List Implementation");
-//        gc.gridy = 0;
-//        mainPanel.add(listTypeLabel, gc);
-
         //Set up check boxes for list type
 
         listTypeCB_arrayList = new JCheckBox(ArrayList.class.getSimpleName());
